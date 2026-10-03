@@ -1,0 +1,54 @@
+# Unity generated folders
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# Asset meta data should be kept, but not for ignored folders
+!/[Aa]ssets/**/*.meta
+
+# IDE / editor folders
+/.vs/
+/.vscode/
+/.idea/
+/.gradle/
+*.DS_Store
+
+# Visual Studio / Rider generated project files
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Unity3D generated meta/crash files
+sysinfo.txt
+crashlytics-build.properties
+ExportedObj/
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Auto-generated Addressables / Burst / TextMeshPro caches
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Claude Code local settings
+.claude/settings.local.json
