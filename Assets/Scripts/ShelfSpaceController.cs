@@ -4,77 +4,30 @@ using UnityEngine;
 
 public class ShelfSpaceController : MonoBehaviour
 {
-    [SerializeField] BoxCollider chipsCollider;
-    [SerializeField] BoxCollider bigDrinksCollider;
-    [SerializeField] BoxCollider fruitsCollider;
-    [SerializeField] BoxCollider largeFruitsCollider;
-    [SerializeField] TMP_Text chipsLabel;
-    [SerializeField] TMP_Text bigDrinksLabel;
-    [SerializeField] TMP_Text fruitsLabel;
-    [SerializeField] TMP_Text largeFruitsLabel;
-    [SerializeField] List<StockObject> bigDrinksInShelf;
-    [SerializeField] List<StockObject> largeFruitsInShelf;
-    [SerializeField] List<StockObject> fruitsInShelf;
-    [SerializeField] List<StockObject> chipsInShelf;
-    [SerializeField] List<Transform> chipPoints;
-    [SerializeField] List<Transform> bigDrinkPoints;
-    [SerializeField] List<Transform> fruitsPoints;
-    [SerializeField] List<Transform> largeFruitsPoints;
+    [SerializeField] private List<ShelfSection> shelfSections;
+    private Dictionary<EStockTypes, ShelfSection> shelfDict = new(); 
     
-    // Get the specific List<Transform> type depending on the stock object's type
-    private List<Transform> GetPointsFor(StockInfo.StockTypes type)
+    private void Awake()
     {
-        switch(type)
+        foreach(ShelfSection section in shelfSections)
         {
-            case StockInfo.StockTypes.chips:      return chipPoints;
-            case StockInfo.StockTypes.bigDrink:   return bigDrinkPoints;
-            case StockInfo.StockTypes.fruit:      return fruitsPoints;
-            case StockInfo.StockTypes.largeFruit: return largeFruitsPoints;
-            default:                              return null;
+            shelfDict[section.GetStockType()] = section;
         }
     }
 
-    // Get the specific List<StockObject> type depending on the stock object's type
-    private List<StockObject> GetListFor(StockObject stockObject)
+    public void PlaceStock(StockObject stockObjectToPlace)
     {
-        switch(StockInfoController.instance.GetStockType(stockObject.GetStockName()))
-        {
-            case StockInfo.StockTypes.chips:
-                return chipsInShelf;
-            case StockInfo.StockTypes.bigDrink:
-                return bigDrinksInShelf;
-            case StockInfo.StockTypes.fruit:
-                return fruitsInShelf;
-            case StockInfo.StockTypes.largeFruit:
-                return largeFruitsInShelf;
-            default: return null;
-        }
-    }
+        /* 
+            * PlaceStock() uses StockInfoController to get stockObjectToPlace's EStockTypes
 
-    // Get the specific List<StockObject> type depending on the stock object's collider
-    private List<StockObject> GetListFor(Collider c)
-    {
-        if(c == bigDrinksCollider)   return bigDrinksInShelf;
-        if(c == largeFruitsCollider) return largeFruitsInShelf;
-        if(c == fruitsCollider)      return fruitsInShelf;
-        if(c == chipsCollider)       return chipsInShelf;
-        return null; // Hit something else other than the 4 colliders
-    }
+            * Using stockObjectToPlace's EStockTypes, PlaceStock() can use shelfDict to access 
+                the specific shelf section stockObjectToPlace will be placed in
+        */
 
-    // Get the specific TMP_Text type depending on the stock object's collider
-    private TMP_Text GetLabelFor(Collider c)
-    {
-        if(c == bigDrinksCollider)   return bigDrinksLabel;
-        if(c == largeFruitsCollider) return largeFruitsLabel;
-        if(c == fruitsCollider)      return fruitsLabel;
-        if(c == chipsCollider)       return chipsLabel;
-        return null;
-    }
-    public void PlaceStock(StockObject objectToPlace)
-    {
-        StockInfo.StockTypes objectType = StockInfoController.instance.GetStockType(objectToPlace.GetStockName());
-        List<Transform> allowedAmount = GetPointsFor(objectType);
-        List<StockObject> currentAmount = GetListFor(objectToPlace);
+        EStockTypes objectType = StockInfoController.instance.GetStockType(stockObjectToPlace.GetStockName());;
+        List<Transform> allowedAmount = shelfDict[objectType].GetPlacementPoints();
+        List<StockObject> currentAmount = shelfDict[objectType].GetAmountInShelf();
+        TMP_Text label = shelfDict[objectType].GetLabel();
 
         // Check if there is no more room left
         if(currentAmount.Count >= allowedAmount.Count)
@@ -83,41 +36,36 @@ public class ShelfSpaceController : MonoBehaviour
         }
 
         // Set the stock object's position
-        objectToPlace.GetStockRB().isKinematic = true;
-        objectToPlace.SetPlaced(true);
-        objectToPlace.GetCollider().enabled = false;
-        objectToPlace.transform.SetParent(allowedAmount[currentAmount.Count]); 
+        stockObjectToPlace.GetStockRB().isKinematic = true;
+        stockObjectToPlace.SetPlaced(true);
+        stockObjectToPlace.GetCollider().enabled = false;
+        stockObjectToPlace.transform.SetParent(allowedAmount[currentAmount.Count]); 
 
         // Add the stock object to its respective List<StockObject>
-        switch(StockInfoController.instance.GetStockType(objectToPlace.GetStockName()))
-        {
-            case StockInfo.StockTypes.chips: 
-                chipsInShelf.Add(objectToPlace);
-                chipsLabel.text = "$" + StockInfoController.instance.GetInfo(chipsInShelf[0].GetStockName()).GetPrice(); 
-                break;
-            case StockInfo.StockTypes.bigDrink: 
-                bigDrinksInShelf.Add(objectToPlace);
-                bigDrinksLabel.text = "$" + StockInfoController.instance.GetInfo(bigDrinksInShelf[0].GetStockName()).GetPrice(); 
-                break;
-            case StockInfo.StockTypes.fruit: 
-                fruitsInShelf.Add(objectToPlace);
-                fruitsLabel.text = "$" + StockInfoController.instance.GetInfo(fruitsInShelf[0].GetStockName()).GetPrice(); 
-                break;
-            case StockInfo.StockTypes.largeFruit: 
-                largeFruitsInShelf.Add(objectToPlace);
-                largeFruitsLabel.text = "$" + StockInfoController.instance.GetInfo(largeFruitsInShelf[0].GetStockName()).GetPrice(); 
-                break;
-        }
+        currentAmount.Add(stockObjectToPlace);
+        label.text = "$" + StockInfoController.instance.GetInfo(currentAmount[0].GetStockName()).GetPrice();
     }
 
     public StockObject GetStock(Collider hitCollider)
     {
         /*
-            1. Get the specific shelf, that the latest stock object was add to, using its designated BoxCollider
-            2. Remove that latest stock object 
+            1. Get the specific section, that the latest stock object was add to, using its designated BoxCollider
+            2. Remove the latest stock object that was added in its section
+            3. Label should reflect if there are no more stock objects in a section
         */
 
-        List<StockObject> currentAmount = GetListFor(hitCollider); // Get the current amount in the specific shelf using its BoxCollider
+        List<StockObject> currentAmount = new(); // Get the current amount in the specific section using its BoxCollider
+        TMP_Text stockObjectLabel = null; 
+
+        foreach(ShelfSection section in shelfSections)
+        {
+            if(section.GetBoxCollider() == hitCollider)
+            {
+                currentAmount = section.GetAmountInShelf();
+                stockObjectLabel = section.GetLabel();
+                break;
+            }
+        }
 
         if(currentAmount.Count == 0 || currentAmount == null) // Check if there isn't anything in that shelf or if the collider returns something else (default = null)
         {
@@ -129,8 +77,6 @@ public class ShelfSpaceController : MonoBehaviour
         currentAmount.RemoveAt(latestStockObjectIndex);               // Remove that latest stock object using its index
 
         // Clear the label once the last stock object has been taken out
-        TMP_Text stockObjectLabel = GetLabelFor(hitCollider);
-
         if(currentAmount.Count == 0)
         {
             stockObjectLabel.text = "Empty";

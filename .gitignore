@@ -51,4 +51,7 @@ ExportedObj/
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 # Claude Code local settings
-.claude/settings.local.json
+.claude
+
+# Claude plugins
+.vibe-wise

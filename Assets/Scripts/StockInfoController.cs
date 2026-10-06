@@ -1,13 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// ----------------------------------------------------------------------------------------------------
+//       StockInfoController is the only class able to access a stock object's StockInfo data
+// ----------------------------------------------------------------------------------------------------
 public class StockInfoController : MonoBehaviour
 {
     [SerializeField] private List<StockInfo> foodInfo, produceInfo;
     public static StockInfoController instance;
     private List<StockInfo> allStock = new();
 
-    // Consolidates stock-object information changes by having each StockObject.Start() replaces info with the controller's version
     public StockInfo GetInfo(string stockName)
     {
         StockInfo infoToReturn = null;
@@ -23,7 +25,7 @@ public class StockInfoController : MonoBehaviour
         return infoToReturn;
     }
 
-    public StockInfo.StockTypes GetStockType(string stockName) => GetInfo(stockName).GetStockType(); // What does => do?
+    public EStockTypes GetStockType(string stockName) => GetInfo(stockName).GetStockType(); 
 
     public float GetPrice(string stockName) => GetInfo(stockName).GetPrice();
 
